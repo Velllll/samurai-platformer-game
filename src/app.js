@@ -63,6 +63,7 @@ window.addEventListener('load', () => {
     }
 
     #draw() {
+      this.canvasSettings.ctx.strokeRect(this.x, this.y, this.playerWidth, this.playerHeight)
       this.canvasSettings.ctx.drawImage(
         this.image,
         this.spriteWidth * this.frameX,
@@ -99,7 +100,16 @@ window.addEventListener('load', () => {
     #handelJump() {
       if(!this.#OnGround()) {
         this.velocity -= this.weight
-      } else {
+      }
+      if(!this.#OnGround() && !this.attack) {
+        this.image.src = this.movement.jump.src
+        this.maxFrames = this.movement.jump.maxFrames
+      } 
+      if(!this.#OnGround() && this.attack) {
+        this.image.src = this.movement.attack.src
+        this.maxFrames = this.movement.attack.maxFrames
+      } 
+      if(this.#OnGround()) {
         this.y = 230
         this.attack = false
         this.image.src = this.movement.run.src
@@ -190,6 +200,53 @@ window.addEventListener('load', () => {
     }
   }
 
+  class Obstacle {
+    frame = 0
+    frameCounter = 0
+
+    constructor(spriteWidth, spriteHeight, width, height, imageSrc, speed, y, maxFrames, canvasSettings) {
+      this.spriteWidth = spriteWidth
+      this.spriteHeight = spriteHeight
+      this.width = width
+      this.height = height
+      this.canvasSettings = canvasSettings
+      this.image = new Image()
+      this.image.src = imageSrc
+      this.y = y
+      this.maxFrames = maxFrames
+      this.speed = speed
+
+      this.x = this.canvasSettings.width
+    }
+
+    update() {
+      this.x -= this.speed
+      this.#draw()
+      this.#updateFrames()
+    }
+
+    #draw() {
+      this.canvasSettings.ctx.drawImage(
+        this.image,
+        this.frame * this.spriteWidth,
+        0,
+        this.spriteWidth,
+        this.spriteHeight,
+        this.x,
+        this.y,
+        this.width,
+        this.height
+      ) 
+    }
+
+    #updateFrames() {
+      if(this.frameCounter % 3 === 0) this.frame++
+      if(this.frame > this.maxFrames) this.frame = 0
+      this.frameCounter++
+    }
+  }
+
+
   class Background {
     constructor(width, height, imageSrc, speed, canvasSettings) {
       this.width = width
@@ -228,34 +285,50 @@ window.addEventListener('load', () => {
 
   class Game {
     enemys = []
+    obstacle = []
+
+    nextObstacleSpawn = 200
+    obstacleTimeCounter = 0
+
     nextEnemySpawn = 500
-    timeCounter = 0
+    enemyTimeCounter = 0
 
     constructor(canvasSettings) {
       this.canvasSettings = canvasSettings
 
       this.backgroundSky = new Background(970, 400, '../assets/background.png', 3, this.canvasSettings)
       this.backgroundClouds = new Background(970, 400, '../assets/clouds.png', 4, this.canvasSettings)
-
       this.playerHandler = new PlayerHandler(this.canvasSettings)
       this.player = new Player(200, 200, 250, 250, 4, 100, 230, this.canvasSettings, this.playerHandler)
     }
 
     update(deltaTime) {
-      this.#addEnemy(deltaTime)
       this.backgroundSky.update()
       this.backgroundClouds.update()
+      this.#addEnemy(deltaTime)
+      this.#addObstacle(deltaTime)
       this.enemys.forEach(e => e.update())
+      this.obstacle.forEach(o => o.update())
       this.player.update()
     }
 
     #addEnemy(deltaTime) {
-      this.timeCounter += deltaTime
-      if(this.timeCounter >= this.nextEnemySpawn) {
+      this.enemyTimeCounter += deltaTime
+      if(this.enemyTimeCounter >= this.nextEnemySpawn) {
         const enemy = new Enemy(410, 80, 410, 80, 4, '../assets/dragon.png', 8, this.canvasSettings)
         this.enemys.push(enemy)
-        this.timeCounter = 0
+        this.enemyTimeCounter = 0
         this.nextEnemySpawn = Math.random() * 1800 + 1200
+      }
+    }
+
+    #addObstacle(deltaTime) {
+      this.obstacleTimeCounter += deltaTime
+      if(this.obstacleTimeCounter >= this.nextObstacleSpawn) {
+        const surikens = new Obstacle(100, 100, 50, 50, '../assets/suriken.png', Math.random() * 2 + 6, 330, 2, this.canvasSettings) 
+        this.obstacle.push(surikens)
+        this.obstacleTimeCounter = 0
+        this.nextObstacleSpawn = Math.random() * 1800 + 1200
       }
     }
   }
