@@ -18,25 +18,42 @@ window.addEventListener('load', () => {
 
   class Player {
     frameX = 0
-    frameY = 0
     frameCounter = 0
 
     velocity = 0
     weight = .5
 
-    constructor(spriteWidth, spriteHeight, playerWidth, playerHeight, maxFrames, playerSpeed, x, y, imageSrc, canvasSettings, playerHandler) {
+    attack = false
+
+    movement = {
+      run: {
+        src: '../assets/Run.png',
+        maxFrames: 7
+      },
+      attack: {
+        src: '../assets/Attack2.png',
+        maxFrames: 5
+      },
+      jump: {
+        src: '../assets/Jump.png',
+        maxFrames: 1
+      }
+    }
+
+    constructor(spriteWidth, spriteHeight, playerWidth, playerHeight, playerSpeed, x, y, canvasSettings, playerHandler) {
       this.spriteWidth = spriteWidth
       this.spriteHeight = spriteHeight
       this.playerWidth = playerWidth
       this.playerHeight = playerHeight
-      this.maxFrames = maxFrames
       this.playerSpeed = playerSpeed
-      this.image = new Image()
-      this.image.src = imageSrc
       this.canvasSettings = canvasSettings
       this.x = x
       this.y = y
       this.playerHandler = playerHandler
+
+      this.image = new Image()
+      this.image.src = this.movement.run.src
+      this.maxFrames = this.movement.run.maxFrames
     }
 
     update() {
@@ -49,7 +66,7 @@ window.addEventListener('load', () => {
       this.canvasSettings.ctx.drawImage(
         this.image,
         this.spriteWidth * this.frameX,
-        this.spriteHeight * this.frameY,
+        0,
         this.spriteWidth,
         this.spriteHeight,
         this.x,
@@ -64,18 +81,31 @@ window.addEventListener('load', () => {
       this.playerHandler.keys.forEach(k => {
         if(k === 'ArrowUp' && this.#OnGround()) {
           this.velocity = 17
+        } 
+        if(k === 'Space' && !this.#OnGround()) {
+          this.attack = true
+          this.image.src = this.movement.attack.src
+          this.maxFrames = this.movement.attack.maxFrames
         }
       }) 
-      if(!this.#OnGround()) {
-        this.velocity -= this.weight
-      } else {
-        this.y = 230
-      }
+
+      this.#handelJump()
     }
 
     #OnGround() {
       return this.y >= 230
     } 
+
+    #handelJump() {
+      if(!this.#OnGround()) {
+        this.velocity -= this.weight
+      } else {
+        this.y = 230
+        this.attack = false
+        this.image.src = this.movement.run.src
+        this.maxFrames = this.movement.run.maxFrames
+      }
+    }
 
     #updateFrames() {
       if(this.frameCounter % this.playerSpeed === 0) this.frameX++
@@ -115,8 +145,48 @@ window.addEventListener('load', () => {
   }
 
   class Enemy {
-    constructor() {
-      
+    frameCounter = 0
+    frame = 0
+
+    constructor(spriteWidth, spriteHeight, width, height, maxFrames, imageSrc, speed, canvasSettings) {
+      this.spriteWidth = spriteWidth
+      this.spriteHeight = spriteHeight
+      this.width = width
+      this.height = height
+      this.maxFrames = maxFrames
+      this.canvasSettings = canvasSettings
+      this.image = new Image()
+      this.image.src = imageSrc
+      this.speed = speed
+
+      this.x = this.canvasSettings.width
+      this.y = Math.random() * 150
+    }
+
+    update() {
+      this.x -= this.speed
+      this.#draw()
+      this.#updateFrames()
+    }
+
+    #draw() {
+      this.canvasSettings.ctx.drawImage(
+        this.image,
+        this.frame * this.spriteWidth,
+        0,
+        this.spriteWidth,
+        this.spriteHeight,
+        this.x, 
+        this.y,
+        this.width,
+        this.height
+      )
+    }
+
+    #updateFrames() {
+      if(this.frameCounter % this.speed === 0) this.frame++
+      if(this.frame > this.maxFrames) this.frame = 0
+      this.frameCounter++
     }
   }
 
@@ -157,6 +227,10 @@ window.addEventListener('load', () => {
   }
 
   class Game {
+    enemys = []
+    nextEnemySpawn = 500
+    timeCounter = 0
+
     constructor(canvasSettings) {
       this.canvasSettings = canvasSettings
 
@@ -164,13 +238,25 @@ window.addEventListener('load', () => {
       this.backgroundClouds = new Background(970, 400, '../assets/clouds.png', 4, this.canvasSettings)
 
       this.playerHandler = new PlayerHandler(this.canvasSettings)
-      this.player = new Player(200, 200, 250, 250, 7, 4, 100, 230, '../assets/Run.png', this.canvasSettings, this.playerHandler)
+      this.player = new Player(200, 200, 250, 250, 4, 100, 230, this.canvasSettings, this.playerHandler)
     }
 
     update(deltaTime) {
+      this.#addEnemy(deltaTime)
       this.backgroundSky.update()
       this.backgroundClouds.update()
+      this.enemys.forEach(e => e.update())
       this.player.update()
+    }
+
+    #addEnemy(deltaTime) {
+      this.timeCounter += deltaTime
+      if(this.timeCounter >= this.nextEnemySpawn) {
+        const enemy = new Enemy(410, 80, 410, 80, 4, '../assets/dragon.png', 8, this.canvasSettings)
+        this.enemys.push(enemy)
+        this.timeCounter = 0
+        this.nextEnemySpawn = Math.random() * 1800 + 1200
+      }
     }
   }
 
