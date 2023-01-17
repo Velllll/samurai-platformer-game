@@ -25,6 +25,8 @@ window.addEventListener('load', () => {
 
     attack = false
 
+    health = 3
+
     movement = {
       run: {
         src: '../assets/Run.png',
@@ -246,7 +248,6 @@ window.addEventListener('load', () => {
     }
   }
 
-
   class Background {
     constructor(width, height, imageSrc, speed, canvasSettings) {
       this.width = width
@@ -310,6 +311,7 @@ window.addEventListener('load', () => {
       this.enemys.forEach(e => e.update())
       this.obstacle.forEach(o => o.update())
       this.player.update()
+      this.#checkPlayerAndEnemyCollision()
     }
 
     #addEnemy(deltaTime) {
@@ -325,11 +327,47 @@ window.addEventListener('load', () => {
     #addObstacle(deltaTime) {
       this.obstacleTimeCounter += deltaTime
       if(this.obstacleTimeCounter >= this.nextObstacleSpawn) {
-        const surikens = new Obstacle(100, 100, 50, 50, '../assets/suriken.png', Math.random() * 2 + 6, 330, 2, this.canvasSettings) 
+        const surikens = new Obstacle(100, 100, 50, 50, '../assets/suriken.png', Math.random() * 2 + 6, 340 - Math.random() * 40, 2, this.canvasSettings) 
         this.obstacle.push(surikens)
         this.obstacleTimeCounter = 0
         this.nextObstacleSpawn = Math.random() * 1800 + 1200
       }
+    }
+
+    #checkPlayerAndEnemyCollision() {
+      const player = {x: this.player.x, y: this.player.y, w: this.player.playerWidth, h: this.player.playerHeight}
+      this.enemys.forEach(e => {
+        const enemy = {x: e.x, y: e.y, w: e.width, h: e.height}
+        this.#rectCollisionDetection(player, enemy)
+      })
+    }
+
+    /**
+     * 
+     * @type {x: number, y: number, w: number, h: number} rect1 
+     * @type {x: number, y: number, w: number, h: number} rect2 
+     */
+    #rectCollisionDetection(rect1, rect2) {
+      if (
+        rect1.x < rect2.x + rect2.w &&
+        rect1.x + rect1.w > rect2.x &&
+        rect1.y < rect2.y + rect2.h &&
+        rect1.h + rect1.y > rect2.y
+      ) {
+        // Collision detected
+        if(this.player.attack) {
+          this.#removeEnemy(rect2)
+        } else {
+          console.log('damage')
+          this.player.health--
+        }
+      } else {
+        // No collision
+      }
+    }
+
+    #removeEnemy(enemy) {
+      this.enemys = [...this.enemys].filter(e => e.y !== enemy.y)
     }
   }
 
