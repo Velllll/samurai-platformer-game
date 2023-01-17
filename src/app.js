@@ -27,6 +27,8 @@ window.addEventListener('load', () => {
 
     health = 3
 
+    gotDamageInAir = false
+
     movement = {
       run: {
         src: '../assets/Run.png',
@@ -64,8 +66,12 @@ window.addEventListener('load', () => {
       this.#updateFrames()
     }
 
+    OnGround() {
+      return this.y >= 230
+    } 
+
     #draw() {
-      this.canvasSettings.ctx.strokeRect(this.x, this.y, this.playerWidth, this.playerHeight)
+      this.canvasSettings.ctx.strokeRect(this.x + 100, this.y + 100, this.playerWidth - 200, this.playerHeight - 200)
       this.canvasSettings.ctx.drawImage(
         this.image,
         this.spriteWidth * this.frameX,
@@ -82,10 +88,10 @@ window.addEventListener('load', () => {
     #handleKeys() {
       this.y -= this.velocity
       this.playerHandler.keys.forEach(k => {
-        if(k === 'ArrowUp' && this.#OnGround()) {
+        if(k === 'ArrowUp' && this.OnGround()) {
           this.velocity = 17
         } 
-        if(k === 'Space' && !this.#OnGround()) {
+        if(k === 'Space' && !this.OnGround()) {
           this.attack = true
           this.image.src = this.movement.attack.src
           this.maxFrames = this.movement.attack.maxFrames
@@ -95,28 +101,31 @@ window.addEventListener('load', () => {
       this.#handelJump()
     }
 
-    #OnGround() {
-      return this.y >= 230
-    } 
-
     #handelJump() {
-      if(!this.#OnGround()) {
+      if(!this.OnGround()) {
         this.velocity -= this.weight
       }
-      if(!this.#OnGround() && !this.attack) {
+      if(!this.OnGround() && !this.attack) {
         this.image.src = this.movement.jump.src
         this.maxFrames = this.movement.jump.maxFrames
       } 
-      if(!this.#OnGround() && this.attack) {
+      if(!this.OnGround() && this.attack) {
         this.image.src = this.movement.attack.src
         this.maxFrames = this.movement.attack.maxFrames
       } 
-      if(this.#OnGround()) {
+      if(this.OnGround()) {
         this.y = 230
         this.attack = false
         this.image.src = this.movement.run.src
         this.maxFrames = this.movement.run.maxFrames
       }
+    }
+
+    getDamage() {
+      if(!this.gotDamageInAir) {
+        this.health--
+        this.gotDamageInAir = true
+      }      
     }
 
     #updateFrames() {
@@ -286,13 +295,14 @@ window.addEventListener('load', () => {
 
   class Game {
     enemys = []
-    obstacle = []
+    obstacles = []
 
     nextObstacleSpawn = 200
     obstacleTimeCounter = 0
 
     nextEnemySpawn = 500
     enemyTimeCounter = 0
+
 
     constructor(canvasSettings) {
       this.canvasSettings = canvasSettings
@@ -304,14 +314,20 @@ window.addEventListener('load', () => {
     }
 
     update(deltaTime) {
+      console.log(this.player.health)
       this.backgroundSky.update()
       this.backgroundClouds.update()
       this.#addEnemy(deltaTime)
       this.#addObstacle(deltaTime)
       this.enemys.forEach(e => e.update())
-      this.obstacle.forEach(o => o.update())
+      this.obstacles.forEach(o => o.update())
       this.player.update()
-      this.#checkPlayerAndEnemyCollision()
+      this.#checkPlayerAndEnemyCollided()
+      this.#checkPlayerAndObstacleCollided()
+
+      if(this.player.OnGround()) {
+        this.player.gotDamageInAir = false
+      }
     }
 
     #addEnemy(deltaTime) {
@@ -328,17 +344,34 @@ window.addEventListener('load', () => {
       this.obstacleTimeCounter += deltaTime
       if(this.obstacleTimeCounter >= this.nextObstacleSpawn) {
         const surikens = new Obstacle(100, 100, 50, 50, '../assets/suriken.png', Math.random() * 2 + 6, 340 - Math.random() * 40, 2, this.canvasSettings) 
-        this.obstacle.push(surikens)
+        this.obstacles.push(surikens)
         this.obstacleTimeCounter = 0
         this.nextObstacleSpawn = Math.random() * 1800 + 1200
       }
     }
 
-    #checkPlayerAndEnemyCollision() {
-      const player = {x: this.player.x, y: this.player.y, w: this.player.playerWidth, h: this.player.playerHeight}
+    #checkPlayerAndEnemyCollided() {
+      const player = {x: this.player.x, y: this.player.y, w: this.player.playerWidth - 100, h: this.player.playerHeight}
       this.enemys.forEach(e => {
         const enemy = {x: e.x, y: e.y, w: e.width, h: e.height}
-        this.#rectCollisionDetection(player, enemy)
+        if(this.#rectCollisionDetection(player, enemy)) {
+          if(this.player.attack) {
+            this.#removeEnemy(enemy)
+          } else {
+            this.player.getDamage()
+          }
+        }
+      })
+    }
+
+    #checkPlayerAndObstacleCollided() {
+      const player = {x: this.player.x + 100, y: this.player.y + 100, w: this.player.playerWidth - 200, h: this.player.playerHeight - 200}
+      this.obstacles.forEach(o => {
+        const obstacle = {x: o.x, y: o.y, w: o.width, h: o.height}
+        if(this.#rectCollisionDetection(player, obstacle)) {
+          this.#removeObstacles(obstacle)
+          this.player.health--
+        }
       })
     }
 
@@ -354,31 +387,29 @@ window.addEventListener('load', () => {
         rect1.y < rect2.y + rect2.h &&
         rect1.h + rect1.y > rect2.y
       ) {
-        // Collision detected
-        if(this.player.attack) {
-          this.#removeEnemy(rect2)
-        } else {
-          console.log('damage')
-          this.player.health--
-        }
+        return true
       } else {
-        // No collision
+        return false
       }
     }
 
     #removeEnemy(enemy) {
       this.enemys = [...this.enemys].filter(e => e.y !== enemy.y)
     }
+
+    #removeObstacles(obstacle) {
+      this.obstacles = [...this.obstacles].filter(o => o.y !== obstacle.y)
+    }
   }
 
   const canvasSettings = new CanvasSettings(innerWidth, 400, 'canvas')
-  const game = new Game(canvasSettings)
+  let game = new Game(canvasSettings)
 
   let lastTimeStamp = 0
   function animate(timeStamp) {
     const deltaTime = timeStamp - lastTimeStamp
     lastTimeStamp = timeStamp
-
+    game.player.health
     game.update(deltaTime)
     requestAnimationFrame(animate)
   }
