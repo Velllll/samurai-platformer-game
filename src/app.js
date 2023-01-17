@@ -21,7 +21,7 @@ window.addEventListener('load', () => {
     frameCounter = 0
 
     velocity = 0
-    weight = .5
+    weight = 1
 
     attack = false
 
@@ -71,7 +71,9 @@ window.addEventListener('load', () => {
     } 
 
     #draw() {
-      this.canvasSettings.ctx.strokeRect(this.x + 100, this.y + 100, this.playerWidth - 200, this.playerHeight - 200)
+      //show player hitbox
+      // this.canvasSettings.ctx.strokeRect(this.x + 100, this.y + 100, this.playerWidth - 200, this.playerHeight - 200)
+      
       this.canvasSettings.ctx.drawImage(
         this.image,
         this.spriteWidth * this.frameX,
@@ -89,7 +91,7 @@ window.addEventListener('load', () => {
       this.y -= this.velocity
       this.playerHandler.keys.forEach(k => {
         if(k === 'ArrowUp' && this.OnGround()) {
-          this.velocity = 17
+          this.velocity = 23
         } 
         if(k === 'Space' && !this.OnGround()) {
           this.attack = true
@@ -293,6 +295,35 @@ window.addEventListener('load', () => {
     }
   }
 
+  class Heart {
+    constructor(width, height, imageSrc, x, y, canvasSettings) {
+      this.width = width
+      this.height = height
+      this.x = x
+      this.y = y
+      this.canvasSettings = canvasSettings
+      this.image = new Image()
+      this.image.src = imageSrc
+    }
+
+    draw(health) {
+      console.log()
+      for (let i = 0; i < health; i++) {
+        this.canvasSettings.ctx.drawImage(
+          this.image,
+          0,
+          0,
+          this.width,
+          this.height,
+          this.x + this.width * i,
+          this.y,
+          this.width,
+          this.height
+        )
+      }
+    }
+  }
+
   class Game {
     enemys = []
     obstacles = []
@@ -303,6 +334,9 @@ window.addEventListener('load', () => {
     nextEnemySpawn = 500
     enemyTimeCounter = 0
 
+    score = 0
+
+    gameDifficulty = 1
 
     constructor(canvasSettings) {
       this.canvasSettings = canvasSettings
@@ -311,23 +345,39 @@ window.addEventListener('load', () => {
       this.backgroundClouds = new Background(970, 400, '../assets/clouds.png', 4, this.canvasSettings)
       this.playerHandler = new PlayerHandler(this.canvasSettings)
       this.player = new Player(200, 200, 250, 250, 4, 100, 230, this.canvasSettings, this.playerHandler)
+      this.heart = new Heart(32, 32, '../assets/heart.png', 20, 70, this.canvasSettings)
     }
 
     update(deltaTime) {
-      console.log(this.player.health)
-      this.backgroundSky.update()
-      this.backgroundClouds.update()
-      this.#addEnemy(deltaTime)
-      this.#addObstacle(deltaTime)
-      this.enemys.forEach(e => e.update())
-      this.obstacles.forEach(o => o.update())
-      this.player.update()
-      this.#checkPlayerAndEnemyCollided()
-      this.#checkPlayerAndObstacleCollided()
+      this.#render()
+      this.#handlerEnemysAndObstacles(deltaTime)
+      this.#updateGameDifficulty(deltaTime)
 
       if(this.player.OnGround()) {
         this.player.gotDamageInAir = false
       }
+    }
+
+    #updateGameDifficulty(deltaTime) {
+      this.gameDifficulty += deltaTime / 1000
+    }
+
+    #render() {
+      this.backgroundSky.update()
+      this.backgroundClouds.update()
+      this.enemys.forEach(e => e.update())
+      this.obstacles.forEach(o => o.update())
+      this.player.update()
+      this.heart.draw(this.player.health)
+      this.#showScore()
+    }
+
+    #handlerEnemysAndObstacles(deltaTime) {
+      this.#addEnemy(deltaTime)
+      this.#addObstacle(deltaTime)
+
+      this.#checkPlayerAndEnemyCollided()
+      this.#checkPlayerAndObstacleCollided()
     }
 
     #addEnemy(deltaTime) {
@@ -343,20 +393,21 @@ window.addEventListener('load', () => {
     #addObstacle(deltaTime) {
       this.obstacleTimeCounter += deltaTime
       if(this.obstacleTimeCounter >= this.nextObstacleSpawn) {
-        const surikens = new Obstacle(100, 100, 50, 50, '../assets/suriken.png', Math.random() * 2 + 6, 340 - Math.random() * 40, 2, this.canvasSettings) 
+        const surikens = new Obstacle(100, 100, 50, 50, '../assets/suriken.png', Math.random() * 2 + 6 + this.gameDifficulty, 340 - Math.random() * 40, 2, this.canvasSettings) 
         this.obstacles.push(surikens)
         this.obstacleTimeCounter = 0
-        this.nextObstacleSpawn = Math.random() * 1800 + 1200
+        this.nextObstacleSpawn = Math.random() * 500 + 700
       }
     }
 
     #checkPlayerAndEnemyCollided() {
-      const player = {x: this.player.x, y: this.player.y, w: this.player.playerWidth - 100, h: this.player.playerHeight}
+      const player = {x: this.player.x + 100, y: this.player.y + 100, w: this.player.playerWidth - 200, h: this.player.playerHeight - 200}
       this.enemys.forEach(e => {
         const enemy = {x: e.x, y: e.y, w: e.width, h: e.height}
         if(this.#rectCollisionDetection(player, enemy)) {
           if(this.player.attack) {
             this.#removeEnemy(enemy)
+            this.score++
           } else {
             this.player.getDamage()
           }
@@ -399,6 +450,15 @@ window.addEventListener('load', () => {
 
     #removeObstacles(obstacle) {
       this.obstacles = [...this.obstacles].filter(o => o.y !== obstacle.y)
+    } 
+
+    gameOver() {
+
+    }
+
+    #showScore() {
+      this.canvasSettings.ctx.font = '20px Libre Baskerville'
+      this.canvasSettings.ctx.fillText(`Score: ${this.score}`, 20, 40)
     }
   }
 
@@ -409,8 +469,11 @@ window.addEventListener('load', () => {
   function animate(timeStamp) {
     const deltaTime = timeStamp - lastTimeStamp
     lastTimeStamp = timeStamp
-    game.player.health
+    
     game.update(deltaTime)
+    if(game.player.health === 0) {
+      game = new Game(canvasSettings)
+    }
     requestAnimationFrame(animate)
   }
   animate(0)
