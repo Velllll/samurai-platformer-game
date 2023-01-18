@@ -13,6 +13,7 @@ window.addEventListener('load', () => {
 
   let lastTimeStamp = 0
   function animate(timeStamp) {
+    canvasSettings.clearCanvas()
     const deltaTime = timeStamp - lastTimeStamp
     lastTimeStamp = timeStamp
 

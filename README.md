@@ -1,5 +1,9 @@
 # Samurai platformer game 
 
+## Demo
+
+https://samurai-platformer-game-xhur.vercel.app/
+
 ## Install npm packages
 
 Run `npm install`
