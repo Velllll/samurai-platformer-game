@@ -14,6 +14,13 @@ window.addEventListener('load', () => {
     clearCanvas() {
       this.ctx.clearRect(0, 0, this.width, this.height)
     }
+
+    showStartScreen() {
+      this.ctx.font = '20px Libre Baskerville'
+      this.ctx.fillStyle = "#fff";
+      this.ctx.fillText("PRESS PLAY", this.width / 2 - 65, this.height / 2 - 20)
+      this.ctx.fillStyle = "#000";
+    }
   }
 
   class Player {
@@ -453,26 +460,37 @@ window.addEventListener('load', () => {
     } 
 
     gameOver() {
+      this.canvasSettings.ctx.fillRect(0, 0, this.canvasSettings.width, this.canvasSettings.height)
+      this.canvasSettings.ctx.fillStyle = "#fff";
+      this.canvasSettings.ctx.fillText("GAME OVER", this.canvasSettings.width / 2 - 70, this.canvasSettings.height / 2 - 20)
+      this.canvasSettings.ctx.fillText(`Score: ${this.score}`, 20, 40)
+      this.canvasSettings.ctx.fillStyle = "#000";
 
     }
 
     #showScore() {
-      this.canvasSettings.ctx.font = '20px Libre Baskerville'
       this.canvasSettings.ctx.fillText(`Score: ${this.score}`, 20, 40)
     }
   }
 
   const canvasSettings = new CanvasSettings(innerWidth, 400, 'canvas')
-  let game = new Game(canvasSettings)
+  let game
+  const playButton = document.getElementById('play')
+  playButton.onclick = () => {
+    game = new Game(canvasSettings)
+  }
 
   let lastTimeStamp = 0
   function animate(timeStamp) {
     const deltaTime = timeStamp - lastTimeStamp
     lastTimeStamp = timeStamp
-    
-    game.update(deltaTime)
-    if(game.player.health === 0) {
-      game = new Game(canvasSettings)
+    if(game) {
+      game.update(deltaTime)
+    } else {
+      canvasSettings.showStartScreen()
+    }
+    if(game && game.player.health <= 0) {
+      game.gameOver()
     }
     requestAnimationFrame(animate)
   }
