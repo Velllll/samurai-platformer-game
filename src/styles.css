@@ -24,6 +24,9 @@
   margin-right: 30px;
 }
 button {
+  border-top-left-radius: 15px;
+  border-bottom-right-radius: 15px;
+
   padding: 0;
   border: none;
   font: inherit;
