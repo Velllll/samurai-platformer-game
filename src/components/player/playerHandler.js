@@ -25,5 +25,25 @@ export default class PlayerHandler {
         this.keys = this.keys.filter(k => k !== 'Space')
       }
     })
+
+    window.addEventListener('touchstart', (e) => {
+      const xPositionTouch = e.changedTouches[0].clientX
+      if(xPositionTouch > this.canvasSettings.width * .5) {
+        this.keys.push("ArrowUp")
+      }
+      if(xPositionTouch < this.canvasSettings.width * .5) {
+        this.keys.push('Space')
+      }
+    })
+    window.addEventListener('touchend', (e) => {
+      const xPositionTouch = e.changedTouches[0].clientX
+      if(xPositionTouch > this.canvasSettings.width * .5) {
+        this.keys = this.keys.filter(k => k !== 'ArrowUp')
+      }
+      if(xPositionTouch < this.canvasSettings.width * .5) {
+        this.keys = this.keys.filter(k => k !== 'Space')
+      }
+      
+    })
   }
 }

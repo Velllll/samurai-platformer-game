@@ -32,7 +32,7 @@ export default class Game {
     this.backgroundClouds = new Background(970, 400, clouds, 4, this.canvasSettings)
     this.playerHandler = new PlayerHandler(this.canvasSettings)
     this.player = new Player(200, 200, 250, 250, 4, 100, 230, this.canvasSettings, this.playerHandler)
-    this.heart = new Heart(32, 32, heart, 20, 70, this.canvasSettings)
+    this.heart = new Heart(32, 32, heart, this.canvasSettings.width * 0.8, 20, this.canvasSettings)
   }
 
   update(deltaTime) {
@@ -142,13 +142,12 @@ export default class Game {
   gameOver() {
     this.canvasSettings.ctx.fillRect(0, 0, this.canvasSettings.width, this.canvasSettings.height)
     this.canvasSettings.ctx.fillStyle = "#fff";
-    this.canvasSettings.ctx.fillText("GAME OVER", this.canvasSettings.width / 2 - 70, this.canvasSettings.height / 2 - 20)
-    this.canvasSettings.ctx.fillText(`Score: ${this.score}`, 20, 40)
+    this.canvasSettings.ctx.fillText("GAME OVER", this.canvasSettings.width / 2, this.canvasSettings.height / 2 - 20)
+    this.canvasSettings.ctx.fillText(`Score: ${this.score}`, this.canvasSettings.width * 0.1, 40)
     this.canvasSettings.ctx.fillStyle = "#000";
-
   }
 
   #showScore() {
-    this.canvasSettings.ctx.fillText(`Score: ${this.score}`, 20, 40)
+    this.canvasSettings.ctx.fillText(`Score: ${this.score}`, this.canvasSettings.width * 0.1, 40)
   }
 }

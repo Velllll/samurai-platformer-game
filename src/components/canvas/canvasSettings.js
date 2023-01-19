@@ -13,11 +13,4 @@ export default class CanvasSettings {
   clearCanvas() {
     this.ctx.clearRect(0, 0, this.width, this.height)
   }
-
-  showStartScreen() {
-    this.ctx.font = '20px Libre Baskerville'
-    this.ctx.fillStyle = "#fff";
-    this.ctx.fillText("PRESS PLAY", this.width / 2 - 65, this.height / 2 - 20)
-    this.ctx.fillStyle = "#000";
-  }
 }
