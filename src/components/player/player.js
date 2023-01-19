@@ -18,14 +18,17 @@ export default class Player {
   movement = {
     run: {
       src: run,
+      image: new Image(),
       maxFrames: 7
     },
     attack: {
       src: attack2,
+      image: new Image(),
       maxFrames: 5
     },
     jump: {
       src: jump,
+      image: new Image(),
       maxFrames: 1
     }
   }
@@ -44,6 +47,14 @@ export default class Player {
     this.image = new Image()
     this.image.src = this.movement.run.src
     this.maxFrames = this.movement.run.maxFrames
+
+    this.#initMovementImages()
+  }
+
+  #initMovementImages() {
+    for(let key in this.movement) {
+      this.movement[key].image.src = this.movement[key].src
+    }
   }
 
   update() {
@@ -81,7 +92,7 @@ export default class Player {
       } 
       if(k === 'Space' && !this.OnGround()) {
         this.attack = true
-        this.image.src = this.movement.attack.src
+        this.image = this.movement.attack.image
         this.maxFrames = this.movement.attack.maxFrames
       }
     }) 
@@ -94,17 +105,17 @@ export default class Player {
       this.velocity -= this.weight
     }
     if(!this.OnGround() && !this.attack) {
-      this.image.src = this.movement.jump.src
+      this.image = this.movement.jump.image
       this.maxFrames = this.movement.jump.maxFrames
     } 
     if(!this.OnGround() && this.attack) {
-      this.image.src = this.movement.attack.src
+      this.image = this.movement.attack.image
       this.maxFrames = this.movement.attack.maxFrames
     } 
     if(this.OnGround()) {
       this.y = 230
       this.attack = false
-      this.image.src = this.movement.run.src
+      this.image = this.movement.run.image
       this.maxFrames = this.movement.run.maxFrames
     }
   }
