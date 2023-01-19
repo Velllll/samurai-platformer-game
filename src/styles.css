@@ -120,15 +120,11 @@ legend {
   justify-content: center;
   flex-direction: column;
 }
-.handlers{
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-top: 30px;
+#fullscreen {
+  position: fixed;
+  top: 10px;
 }
-.bnts {
-  margin-right: 30px;
-}
+
 button {
   border-top-left-radius: 15px;
   border-bottom-right-radius: 15px;
@@ -141,13 +137,16 @@ button {
   cursor: pointer;
   background-color: rgb(255, 255, 255);
   color:rgb(0, 0, 0);
-  font-size: 30px;
+  font-size: 20px;
   padding: 0 30px;
 }
-.info {
-  text-align: center;
+@media (min-height: 600px) {
+  #fullscreen {
+    width: 0;
+    height: 0;
+    overflow: hidden;
+  }
 }
-
 @media (max-height: 420px) {
   .container {
     /* display: block; */
