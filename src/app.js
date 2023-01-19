@@ -18,9 +18,6 @@ window.addEventListener('load', () => {
       game = new Game(canvasSettings)
     }
   })
-  document.getElementById('fullscreen').addEventListener('click', () => {
-    menu.toggleFullScreen()
-  })
 
   let lastTimeStamp = 0
   function animate(timeStamp) {
