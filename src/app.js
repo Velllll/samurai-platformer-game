@@ -13,6 +13,11 @@ window.addEventListener('load', () => {
       game = new Game(canvasSettings)
     }
   })
+  window.addEventListener('touchstart', () => {
+    if(!game || game.player.health <= 0) {
+      game = new Game(canvasSettings)
+    }
+  })
 
   let lastTimeStamp = 0
   function animate(timeStamp) {

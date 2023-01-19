@@ -28,10 +28,10 @@ export default class PlayerHandler {
 
     window.addEventListener('touchstart', (e) => {
       const xPositionTouch = e.changedTouches[0].clientX
-      if(xPositionTouch > this.canvasSettings.width * .5) {
+      if(xPositionTouch > this.canvasSettings.width * .5 && !this.keys.includes('ArrowUp')) {
         this.keys.push("ArrowUp")
       }
-      if(xPositionTouch < this.canvasSettings.width * .5) {
+      if(xPositionTouch < this.canvasSettings.width * .5 && !this.keys.includes('Space')) {
         this.keys.push('Space')
       }
     })
