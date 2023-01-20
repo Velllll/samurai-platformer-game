@@ -15,6 +15,7 @@ Run `npm build` (production)
 ## For development 
 
 Run `npm start`
+Go to `localhost:8000`
 
 ## Stack
 
